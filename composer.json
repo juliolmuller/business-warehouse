@@ -16,8 +16,6 @@
   },
   "require": {
     "php": "^8.0",
-    "guzzlehttp/guzzle": "^7.2",
-    "league/flysystem": "^2.0",
     "vlucas/phpdotenv": "^5.3"
   },
   "config": {
