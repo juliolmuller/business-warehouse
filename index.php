@@ -3,8 +3,8 @@
 require_once './vendor/autoload.php';
 
 use App\Config;
-use App\SqlServerToMySqlTranslation;
-use App\SqlTranslator;
+use App\SqlTranslation\SqlServerToMySqlTranslation;
+use App\SqlTranslation\SqlTranslator;
 
 Config::init();
 

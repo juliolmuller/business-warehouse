@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\SqlTranslation;
 
 class SqlServerToMySqlTranslation extends SqlTranslation
 {

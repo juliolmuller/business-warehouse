@@ -1,10 +1,8 @@
 <?php
 
-namespace App;
+namespace App\SqlTranslation;
 
-use App\SqlTranslation;
 use RuntimeException;
-
 
 class SqlTranslator
 {

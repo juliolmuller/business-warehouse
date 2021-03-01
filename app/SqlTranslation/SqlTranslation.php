@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\SqlTranslation;
 
 abstract class SqlTranslation
 {
