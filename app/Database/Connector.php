@@ -13,10 +13,10 @@ class Connector
     {
         $this->connection = new PDO(
             "{$dbDriver}: " .
-                "host={$dbHost};" .
-                "dbname={$dbName};",
-            $dbUsername,
-            $dbPassword,
+            "host={$dbHost};" .
+            "dbname={$dbName};" .
+            "user={$dbUsername};" .
+            "password={$dbPassword};"
         );
     }
 
