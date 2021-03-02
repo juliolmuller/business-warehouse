@@ -28,7 +28,7 @@ function setup_staging_area()
 {
     $sql = file_get_contents('./resources/BD_VAREJO.mysql.sql');
     $stagingArea = new StagingArea();
-    $stagingArea->execFromString($sql);
+    $stagingArea->execFromString($sql, true);
 }
 
 Config::init();

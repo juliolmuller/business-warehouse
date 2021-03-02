@@ -25,11 +25,15 @@ class Connector
         return $this->connection;
     }
 
-    public function execFromString(string $sql): PDOStatement
+    public function execFromString(string $sql, bool $prepared = false): int|false|PDOStatement
     {
-        $stmt = $this->connection->prepare($sql);
-        $stmt->execute();
+        if ($prepared) {
+            $stmt = $this->connection->prepare($sql);
+            $stmt->execute();
 
-        return $stmt;
+            return $stmt;
+        }
+
+        return $this->connection->exec($sql);
     }
 }
