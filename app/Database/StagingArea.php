@@ -2,8 +2,6 @@
 
 namespace App\Database;
 
-use PDO;
-
 class StagingArea extends Connector
 {
     public function __construct()
