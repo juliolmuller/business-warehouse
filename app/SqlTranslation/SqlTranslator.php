@@ -51,7 +51,7 @@ class SqlTranslator
             $fileRows[] = $row;
         }
 
-        $oldSql = join('', $fileRows);
+        $oldSql = mb_convert_encoding(join('', $fileRows), 'UTF-8', 'ISO-8859-1');
         $newSql = $translation->translate($oldSql);
 
         fwrite($this->targetFile, $newSql);
