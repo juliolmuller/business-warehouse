@@ -58,13 +58,25 @@ function execute_etl()
     $dataLink->seedDimensionClientes();
     $dataLink->seedDimensionFornecedores();
     $dataLink->seedFactCompras();
+    $dataLink->seedFactVendas();
 }
 
 Config::init();
 
+echo "     => Traduzindo SQL de backup...";
 translate_sql();
-setup_staging_area();
-setup_data_warehouse();
-execute_etl();
+echo "\r  BW => SQL traduzido                                    (etapa 1 de 4) \n";
 
-echo "Application finished! \n\n";
+echo "     => Recuperando backup em MySQL...";
+setup_staging_area();
+echo "\r  BW => Esquemas de Staging Area criados em MySQL        (etapa 2 de 4) \n";
+
+echo "     => Executando DDL de Data Warehouse...";
+setup_data_warehouse();
+echo "\r  BW => Esquemas de Data Waregouse criados em PostgreSQL (etapa 3 de 4) \n";
+
+echo "     => Carregando dados em Data Waregouse...";
+execute_etl();
+echo "\r  BW => Dados carregados em Data Waregouse               (etapa 4 de 4) \n";
+
+echo "\n     Processo de ETL concluido \n\n";
