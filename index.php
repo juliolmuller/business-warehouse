@@ -57,15 +57,7 @@ function execute_etl()
     $dataLink->seedDimensionProdutos();
     $dataLink->seedDimensionClientes();
     $dataLink->seedDimensionFornecedores();
-
-    var_export($dataLink->getEstadosKeys());
-    var_export($dataLink->getCidadesKeys());
-    var_export($dataLink->getLojasKeys());
-    var_export($dataLink->getFuncionariosKeys());
-    var_export($dataLink->getCategoriasKeys());
-    var_export($dataLink->getProdutosKeys());
-    var_export($dataLink->getClientesKeys());
-    var_export($dataLink->getFornecedoresKeys());
+    $dataLink->seedFactCompras();
 }
 
 Config::init();
