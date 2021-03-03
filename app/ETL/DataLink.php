@@ -203,78 +203,6 @@ class DataLink
         }
     }
 
-    public function getEstadosKeys(): array
-    {
-        $keys = $this->dataWarehouse->query(
-            'SELECT sigla_uf FROM estados',
-        )->fetchAll(PDO::FETCH_COLUMN);
-
-        return $keys;
-    }
-
-    public function getCidadesKeys(): array
-    {
-        $keys = $this->dataWarehouse->query(
-            'SELECT cod_cidade FROM cidades',
-        )->fetchAll(PDO::FETCH_COLUMN);
-
-        return $keys;
-    }
-
-    public function getLojasKeys(): array
-    {
-        $keys = $this->dataWarehouse->query(
-            'SELECT cod_loja FROM lojas',
-        )->fetchAll(PDO::FETCH_COLUMN);
-
-        return $keys;
-    }
-
-    public function getFuncionariosKeys(): array
-    {
-        $keys = $this->dataWarehouse->query(
-            'SELECT matricula FROM funcionarios',
-        )->fetchAll(PDO::FETCH_COLUMN);
-
-        return $keys;
-    }
-
-    public function getCategoriasKeys(): array
-    {
-        $keys = $this->dataWarehouse->query(
-            'SELECT cod_categoria FROM categorias',
-        )->fetchAll(PDO::FETCH_COLUMN);
-
-        return $keys;
-    }
-
-    public function getProdutosKeys(): array
-    {
-        $keys = $this->dataWarehouse->query(
-            'SELECT cod_produto FROM produtos',
-        )->fetchAll(PDO::FETCH_COLUMN);
-
-        return $keys;
-    }
-
-    public function getClientesKeys(): array
-    {
-        $keys = $this->dataWarehouse->query(
-            'SELECT cpf FROM clientes',
-        )->fetchAll(PDO::FETCH_COLUMN);
-
-        return $keys;
-    }
-
-    public function getFornecedoresKeys(): array
-    {
-        $keys = $this->dataWarehouse->query(
-            'SELECT cod_fornecedor FROM fornecedores',
-        )->fetchAll(PDO::FETCH_COLUMN);
-
-        return $keys;
-    }
-
     private function fetchFromCompras($fornecedor, $categoria, $produto, $mes, $ano)
     {
         $sql = [
@@ -351,6 +279,130 @@ class DataLink
                         foreach ([0, 1] as $ano) {
                             $resultSet = $this->fetchFromCompras($fornecedor, $categoria, $produto, $mes, $ano);
                             $this->loadToFactCompras($resultSet);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private function fetchFromVendas($estado, $cidade, $loja, $funcionario, $cliente, $categoria, $produto, $mes, $ano)
+    {
+        $sql = [
+            'estado'      => [
+                'column'  => 'cidades.tb001_sigla_uf AS "estado"',
+                'group'   => 'cidades.tb001_sigla_uf',
+            ],
+            'cidade'      => [
+                'column'  => 'enderecos.tb002_cod_cidade AS "cidade"',
+                'group'   => 'enderecos.tb002_cod_cidade',
+            ],
+            'loja'        => [
+                'column'  => 'funcionarios.tb004_cod_loja AS "loja"',
+                'group'   => 'funcionarios.tb004_cod_loja',
+            ],
+            'funcionario' => [
+                'column'  => 'vendas.tb005_matricula AS "funcionario"',
+                'group'   => 'vendas.tb005_matricula',
+            ],
+            'cliente'     => [
+                'column'  => 'vendas.tb010_cpf AS "cliente"',
+                'group'   => 'vendas.tb010_cpf',
+            ],
+            'categoria'   => [
+                'column'  => 'produtos.tb013_cod_categoria AS "categoria"',
+                'group'   => 'produtos.tb013_cod_categoria',
+            ],
+            'produto'     => [
+                'column'  => 'vendas.tb012_cod_produto AS "produto"',
+                'group'   => 'vendas.tb012_cod_produto',
+            ],
+            'mes'         => [
+                'column'  => 'YEAR(vendas.tb010_012_data) AS "ano"',
+                'group'   => 'YEAR(vendas.tb010_012_data)',
+            ],
+            'ano'         => [
+                'column'  => 'MONTH(vendas.tb010_012_data) AS "mes"',
+                'group'   => 'MONTH(vendas.tb010_012_data)',
+            ],
+        ];
+        $groups = [];
+        $columns = [];
+        $funcionario && array_push($columns, $sql['funcionario']['column']) && array_push($groups, $sql['funcionario']['group']);
+        $categoria && array_push($columns, $sql['categoria']['column']) && array_push($groups, $sql['categoria']['group']);
+        $cliente && array_push($columns, $sql['cliente']['column']) && array_push($groups, $sql['cliente']['group']);
+        $produto && array_push($columns, $sql['produto']['column']) && array_push($groups, $sql['produto']['group']);
+        $estado && array_push($columns, $sql['estado']['column']) && array_push($groups, $sql['estado']['group']);
+        $cidade && array_push($columns, $sql['cidade']['column']) && array_push($groups, $sql['cidade']['group']);
+        $loja && array_push($columns, $sql['loja']['column']) && array_push($groups, $sql['loja']['group']);
+        $mes && array_push($columns, $sql['mes']['column']) && array_push($groups, $sql['mes']['group']);
+        $ano && array_push($columns, $sql['ano']['column']) && array_push($groups, $sql['ano']['group']);
+
+        return $this->stagingArea->query(
+            'SELECT' .
+            '        SUM(vendas.tb010_012_quantidade) AS "quantidade",' .
+            '        SUM(vendas.tb010_012_quantidade * vendas.tb010_012_valor_unitario) AS "valor"' .
+            '    ' . (count($columns) ? ',' : '') .
+            '    ' . join(',', $columns) .
+            '    FROM' .
+            '        tb010_012_vendas vendas' .
+            '    INNER JOIN' .
+            '        tb012_produtos produtos ON produtos.tb012_cod_produto = vendas.tb012_cod_produto' .
+            '    INNER JOIN' .
+            '        tb005_funcionarios funcionarios ON funcionarios.tb005_matricula = vendas.tb005_matricula' .
+            '    INNER JOIN' .
+            '        tb004_lojas lojas ON lojas.tb004_cod_loja = funcionarios.tb004_cod_loja' .
+            '    INNER JOIN' .
+            '        tb003_enderecos enderecos ON enderecos.tb003_cod_endereco = lojas.tb003_cod_endereco' .
+            '    INNER JOIN' .
+            '        tb002_cidades cidades ON cidades.tb002_cod_cidade = enderecos.tb002_cod_cidade' .
+            '    ' . (count($groups) ? 'GROUP BY' : '') .
+            '    ' . join(',', $groups)
+        )->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    private function loadToFactVendas($records)
+    {
+        $stmt = $this->dataWarehouse->prepare(
+            'INSERT INTO fato_vendas' .
+            '        (funcionario, categoria, produto, cliente, estado, cidade, loja, ano, mes, valor, quantidade, lucratividade)' .
+            '    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        );
+
+        foreach ($records as $record) {
+            $stmt->bindValue(1, $record->funcionario ?? null);
+            $stmt->bindValue(2, $record->categoria ?? null);
+            $stmt->bindValue(3, $record->produto ?? null);
+            $stmt->bindValue(4, $record->cliente ?? null);
+            $stmt->bindValue(5, $record->estado ?? null);
+            $stmt->bindValue(6, $record->cidade ?? null);
+            $stmt->bindValue(7, $record->loja ?? null);
+            $stmt->bindValue(8, $record->ano ?? null);
+            $stmt->bindValue(9, $record->mes ?? null);
+            $stmt->bindValue(10, $record->valor ?? 0);
+            $stmt->bindValue(11, $record->quantidade ?? 0);
+            $stmt->bindValue(12, $record->custo ?? 0);
+            $stmt->execute();
+        }
+    }
+
+    public function seedFactVendas()
+    {
+        foreach ([0, 1] as $estado) {
+            foreach ([0, 1] as $cidade) {
+                foreach ([0, 1] as $loja) {
+                    foreach ([0, 1] as $funcionario) {
+                        foreach ([0, 1] as $cliente) {
+                            foreach ([0, 1] as $categoria) {
+                                foreach ([0, 1] as $produto) {
+                                    foreach ([0, 1] as $mes) {
+                                        foreach ([0, 1] as $ano) {
+                                            $resultSet = $this->fetchFromVendas($estado, $cidade, $loja, $funcionario, $cliente, $categoria, $produto, $mes, $ano);
+                                            $this->loadToFactVendas($resultSet);
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
